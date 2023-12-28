@@ -4,7 +4,7 @@ import os
 import subprocess
 from dataclasses import dataclass, field
 
-from clippy.project.project_summary import get_file_summary
+from clippinator.project.project_summary import get_file_summary
 
 
 @dataclass
@@ -23,7 +23,7 @@ class Project:
         return os.path.basename(self.path)
 
     def get_folder_summary(self, path: str, indent: str = "", add_linting: bool = True, top_level: bool = False,
-                           length_3: int = 4000) -> str:
+                           length_3: int = 20000) -> str:
         """
         Get the summary of a folder in the project, recursively, file-by-file, using self.get_file_summary()
         path:
@@ -36,7 +36,7 @@ class Project:
             dir2:
                 file3.py
         """
-        from clippy.tools.utils import skip_file, skip_file_summary, trim_extra
+        from clippinator.tools.utils import skip_file, skip_file_summary, trim_extra
 
         res = ""
         if not os.path.isdir(path):
@@ -65,8 +65,8 @@ class Project:
         return res
 
     def lint(self, path: str = ''):
-        from clippy.tools.code_tools import lint_project
-        from clippy.tools.utils import trim_extra
+        from clippinator.tools.code_tools import lint_project
+        from clippinator.tools.utils import trim_extra
 
         path = os.path.join(self.path, path)
         path = path or self.path
@@ -77,12 +77,12 @@ class Project:
                                          text=True, cwd=self.path)
             except Exception as e:
                 return f"Linter error: {e}"
-            return trim_extra(process.stdout.strip() + process.stderr.strip(), 1050, end_length=700)
+            return trim_extra(process.stdout.strip() + process.stderr.strip(), 3000, end_length=1500)
         return lint_project(path)
 
     def lint_file(self, path: str):
-        from clippy.tools.code_tools import lint_file
-        from clippy.tools.utils import trim_extra
+        from clippinator.tools.code_tools import lint_file
+        from clippinator.tools.utils import trim_extra
 
         path = os.path.join(self.path, path)
         if self.ci_commands.get('lintfile', '').strip():
@@ -101,7 +101,7 @@ class Project:
         return self.summary_cache
 
     def menu(self, prompt=None):
-        from clippy.tools.utils import select, get_input_from_editor
+        from clippinator.tools.utils import select, get_input_from_editor
         prompt_options = ["Edit action summary"] * (prompt is not None)
         res = select(["Continue", "Architecture", "Objective", "Memories", "CI"] + prompt_options, "Project Menu")
         if res == 1:
@@ -119,7 +119,7 @@ class Project:
             prompt.last_summary = get_input_from_editor(prompt.last_summary)
 
     def prompt_fields(self) -> dict:
-        from clippy.tools.architectural import templates
+        from clippinator.tools.architectural import templates
 
         default_architecture = templates['General']['architecture']
 
